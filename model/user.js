@@ -5,15 +5,12 @@ const userSchema = mongoose.Schema({
   phone: {
     type: String,
     require: false,
-    default: "",
   },
   google_id: {
     type: String,
-    default: "",
   },
   otp: {
     type: String,
-    default: "",
   },
   otpVerification: {
     type: Boolean,
@@ -28,26 +25,27 @@ const userSchema = mongoose.Schema({
   },
   latitude: {
     type: String,
-    default: "",
   },
   longitude: {
     type: String,
-    default: "",
   },
   pinCode: {
     type: String,
   },
   firstName: {
     type: String,
-    default: "",
+  },
+  password: {
+    type: String,
+  },
+  email: {
+    type: String,
+  },
+  fullName: {
+    type: String,
   },
   lastName: {
     type: String,
-    default: "",
-  },
-  userName: {
-    type: String,
-    default: "",
   },
   userType: {
     type: String,

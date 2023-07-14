@@ -2,18 +2,22 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authConfig = require("../configs/auth.config");
 var newOTP = require("otp-generators");
-const User = require("../models/user.model");
-const helpandSupport = require('../models/helpAndSupport');
+const User = require("../model/user");
+const helpandSupport = require('../model/helpAndSupport');
 exports.registration = async (req, res) => {
         const { phone, email } = req.body;
         try {
                 req.body.email = email.split(" ").join("").toLowerCase();
                 let user = await User.findOne({ $and: [{ $or: [{ email: req.body.email }, { phone: phone }] }], userType: "INSTRUCTOR" });
                 if (!user) {
-                        req.body.password = bcrypt.hashSync(req.body.password, 8);
-                        req.body.userType = "INSTRUCTOR";
-                        const userCreate = await User.create(req.body);
-                        res.status(200).send({ status: 200, message: "registered successfully ", data: userCreate, });
+                        if (req.body.password == req.body.confirmPassword) {
+                                req.body.password = bcrypt.hashSync(req.body.password, 8);
+                                req.body.userType = "INSTRUCTOR";
+                                const userCreate = await User.create(req.body);
+                                res.status(200).send({ status: 200, message: "registered successfully ", data: userCreate, });
+                        } else {
+                                res.status(201).send({ status: 201, message: "Password not matched", data: [] });
+                        }
                 } else {
                         res.status(409).send({ status: 409, message: "Already Exist", data: [] });
                 }
@@ -33,10 +37,14 @@ exports.signin = async (req, res) => {
                 if (!isValidPassword) {
                         return res.status(401).send({ status: 401, message: "Wrong password" });
                 }
-                const accessToken = jwt.sign({ id: user._id }, authConfig.secret, {
-                        expiresIn: authConfig.accessTokenTime,
-                });
-                res.status(201).send({ data: user, accessToken: accessToken });
+                const accessToken = jwt.sign({ id: user._id }, authConfig.secret, { expiresIn: authConfig.accessTokenTime, });
+                let obj = {
+                        _id: user._id,
+                        phone: user.phone,
+                        otpVerification: user.otpVerification,
+                        accessToken: accessToken
+                }
+                res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
         } catch (error) {
                 console.error(error);
                 res.status(500).send({ status: 500, message: "Server error" + error.message });
@@ -52,7 +60,7 @@ exports.loginWithPhone = async (req, res) => {
                 const userObj = {};
                 userObj.otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
                 userObj.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
-                userObj.accountVerification = false;
+                userObj.otpVerification = false;
                 const updated = await User.findOneAndUpdate({ phone: phone, userType: "INSTRUCTOR" }, userObj, { new: true, });
                 res.status(200).send({ status: 200, userId: updated._id, otp: updated.otp });
         } catch (error) {
@@ -70,9 +78,15 @@ exports.verifyOtp = async (req, res) => {
                 if (user.otp !== otp || user.otpExpiration < Date.now()) {
                         return res.status(400).json({ status: 400, message: "Invalid OTP" });
                 }
-                const updated = await User.findByIdAndUpdate({ _id: user._id }, { accountVerification: true }, { new: true });
-                const accessToken = jwt.sign({ id: user._id }, authConfig.secret, {expiresIn: authConfig.accessTokenTime,});
-                res.status(200).send({ status: 200, message: "logged in successfully", accessToken: accessToken, data: updated });
+                const updated = await User.findByIdAndUpdate({ _id: user._id }, { otpVerification: true }, { new: true });
+                const accessToken = jwt.sign({ id: user._id }, authConfig.secret, { expiresIn: authConfig.accessTokenTime, });
+                let obj = {
+                        _id: updated._id,
+                        phone: updated.phone,
+                        otpVerification: updated.otpVerification,
+                        accessToken: accessToken
+                }
+                res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
         } catch (err) {
                 console.log(err.message);
                 res.status(500).send({ status: 500, error: "internal server error" + err.message });
@@ -80,7 +94,7 @@ exports.verifyOtp = async (req, res) => {
 };
 exports.getProfile = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         return res.status(200).json({ status: 200, message: "get Profile", data: data });
                 } else {
@@ -91,6 +105,25 @@ exports.getProfile = async (req, res) => {
                 res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
+exports.editProfile = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        let obj = {
+
+                        }
+                        const updated = await User.findOneAndUpdate({ _id: data._id }, { $set: obj }, { new: true });
+                        return res.status(200).json({ status: 200, message: "Profile data update", data: updated });
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+
+
 exports.resendOTP = async (req, res) => {
         const { id } = req.params;
         try {
@@ -100,8 +133,8 @@ exports.resendOTP = async (req, res) => {
                 }
                 const otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
                 const otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
-                const accountVerification = false;
-                const updated = await User.findOneAndUpdate({ _id: user._id }, { otp, otpExpiration, accountVerification }, { new: true });
+                const otpVerification = false;
+                const updated = await User.findOneAndUpdate({ _id: user._id }, { otp, otpExpiration, otpVerification }, { new: true });
                 res.status(200).send({ status: 200, message: "OTP resent", otp: otp });
         } catch (error) {
                 console.error(error);
@@ -155,7 +188,7 @@ exports.socialLogin = async (req, res) => {
 };
 exports.AddQuery = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         const data = {
                                 user: data._id,
@@ -176,7 +209,7 @@ exports.AddQuery = async (req, res) => {
 };
 exports.getAllQuery = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user.id, });
+                const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         const Data = await helpandSupport.find({ user: req.user._id });
                         if (data.length == 0) {

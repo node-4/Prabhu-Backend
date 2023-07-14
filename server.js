@@ -20,6 +20,7 @@ app.get("/", (req, res) => {
   res.status(200).send({ msg: "Working App" });
 });
 require("./route/static.route")(app);
+require("./route/instructor")(app);
 
 
 app.listen(PORT, () => {
