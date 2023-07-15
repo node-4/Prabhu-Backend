@@ -4,6 +4,8 @@ const authConfig = require("../configs/auth.config");
 var newOTP = require("otp-generators");
 const User = require("../model/user");
 const helpandSupport = require('../model/helpAndSupport');
+const webinarTopic = require('../model/webinarTopic');
+
 exports.registration = async (req, res) => {
         const { phone, email } = req.body;
         try {
@@ -110,7 +112,9 @@ exports.editProfile = async (req, res) => {
                 const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         let obj = {
-
+                                firstName: req.body.firstName || data.firstName, email: req.body.email || data.email,
+                                lastName: req.body.lastName || data.lastName, phone: req.body.phone || data.phone,
+                                bio: req.body.bio || data.bio
                         }
                         const updated = await User.findOneAndUpdate({ _id: data._id }, { $set: obj }, { new: true });
                         return res.status(200).json({ status: 200, message: "Profile data update", data: updated });
@@ -122,8 +126,6 @@ exports.editProfile = async (req, res) => {
                 res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
-
-
 exports.resendOTP = async (req, res) => {
         const { id } = req.params;
         try {
@@ -190,14 +192,14 @@ exports.AddQuery = async (req, res) => {
         try {
                 const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
-                        const data = {
+                        const obj = {
                                 user: data._id,
                                 name: req.body.name,
                                 email: req.body.email,
                                 mobile: req.body.mobile,
                                 query: req.body.query
                         }
-                        const Data = await helpandSupport.create(data);
+                        const Data = await helpandSupport.create(obj);
                         res.status(200).json({ status: 200, message: "Send successfully.", data: Data })
                 } else {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
@@ -222,6 +224,79 @@ exports.getAllQuery = async (req, res) => {
                 }
         } catch (err) {
                 console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.AddWebinarTopic = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        const obj = {
+                                user: data._id,
+                                title: req.body.title,
+                                content: req.body.content,
+                        }
+                        const Data = await webinarTopic.create(obj);
+                        res.status(200).json({ status: 200, message: "WebinarTopic created successfully.", data: Data })
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAllWebinarTopic = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        const Data = await webinarTopic.find({ user: req.user._id });
+                        if (data.length == 0) {
+                                return res.status(404).json({ status: 404, message: "webinarTopic data not found", data: {} });
+                        } else {
+                                res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getWebinarTopicbyId = async (req, res) => {
+        try {
+                const data = await webinarTopic.findById(req.params.id);
+                if (!data || data.length === 0) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+                return res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.updateWebinarTopicbyId = async (req, res) => {
+        try {
+                const data = await webinarTopic.findById(req.params.id);
+                if (!data || data.length === 0) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                } else {
+                        if (req.body.status == "Approved") {
+                                const updated = await webinarTopic.findOneAndUpdate({ _id: data._id }, { $set: { status: req.body.status } }, { new: true });
+                                return res.status(200).json({ status: 200, message: "Approved update found successfully.", data: data });
+                        }
+                        if (req.body.status == "Disapproved") {
+                                const updated = await webinarTopic.findOneAndUpdate({ _id: data._id }, { $set: { status: req.body.status } }, { new: true });
+                                return res.status(200).json({ status: 200, message: "Disapproved update found successfully.", data: data });
+                        }
+                        if (req.body.status == "Pending") {
+                                const updated = await webinarTopic.findOneAndUpdate({ _id: data._id }, { $set: { status: req.body.status } }, { new: true });
+                                return res.status(200).json({ status: 200, message: "Pending update found successfully.", data: data });
+                        }
+                }
+        } catch (error) {
+                console.log(error);
                 res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };

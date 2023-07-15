@@ -4,7 +4,14 @@ const courses = mongoose.Schema({
                 type: mongoose.Schema.ObjectId,
                 ref: "user",
         },
+        webinarTopicId: {
+                type: mongoose.Schema.ObjectId,
+                ref: "webinarTopic",
+        },
         title: {
+                type: String,
+        },
+        image: {
                 type: String,
         },
         date: {
@@ -18,9 +25,16 @@ const courses = mongoose.Schema({
         },
         status: {
                 type: String,
-                enum: [""]
+                enum: ["Draft", "unDraft"]
         },
-
+        visibilty: {
+                type: String,
+                enum: ["Public", "Private"]
+        },
+        publish: {
+                type: String,
+                enum: ["Immediately", "Not Immediately"]
+        },
 })
 const course = mongoose.model('courses', courses);
 module.exports = course

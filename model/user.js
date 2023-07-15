@@ -6,6 +6,9 @@ const userSchema = mongoose.Schema({
     type: String,
     require: false,
   },
+  bio: {
+    type: String,
+  },
   google_id: {
     type: String,
   },
