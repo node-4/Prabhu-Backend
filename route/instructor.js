@@ -1,5 +1,5 @@
 const { validateUser } = require("../middlewares");
-const auth = require("../controllers/instructorController");
+const auth = require("../controllers/4instructorController");
 const { authJwt, authorizeRoles } = require("../middlewares");
 var multer = require("multer");
 const path = require("path");

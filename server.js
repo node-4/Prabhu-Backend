@@ -21,6 +21,7 @@ app.get("/", (req, res) => {
 });
 require("./route/static.route")(app);
 require("./route/instructor")(app);
+require("./route/admin")(app);
 
 
 app.listen(PORT, () => {

@@ -52,7 +52,7 @@ const userSchema = mongoose.Schema({
   },
   userType: {
     type: String,
-    enum: ["INSTRUCTOR", "USER", "ACCOUNT MANAGER"],
+    enum: ["INSTRUCTOR", "USER", "ACCOUNT MANAGER", "BUISNESS MANAGER", "ADMIN"],
     default: "USER"
   },
   photo: {
