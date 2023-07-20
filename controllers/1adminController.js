@@ -5,6 +5,8 @@ var newOTP = require("otp-generators");
 const User = require("../model/user");
 const helpandSupport = require('../model/helpAndSupport');
 const webinarTopic = require('../model/webinarTopic');
+const industryCategory = require('../model/industryCategory');
+const industrySubcategory = require('../model/industrySubcategory');
 
 exports.registration = async (req, res) => {
         const { phone, email } = req.body;
@@ -59,6 +61,133 @@ exports.getProfile = async (req, res) => {
                         return res.status(200).json({ status: 200, message: "get Profile", data: data });
                 } else {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.AddIndustryCategory = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        const obj = {
+                                title: req.body.title,
+                        }
+                        const Data = await industryCategory.create(obj);
+                        res.status(200).json({ status: 200, message: "Industry category created successfully.", data: Data })
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAllIndustryCategory = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        const Data = await industryCategory.find({});
+                        if (data.length == 0) {
+                                return res.status(404).json({ status: 404, message: "Industry category data not found", data: {} });
+                        } else {
+                                res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getIndustryCategorybyId = async (req, res) => {
+        try {
+                const data = await industryCategory.findById(req.params.id);
+                if (!data || data.length === 0) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+                return res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.deleteIndustryCategory = async (req, res) => {
+        try {
+                const data = await industryCategory.findById(req.params.id);
+                if (!data) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                } else {
+                        const updated = await industryCategory.findByIdAndDelete({ _id: data._id });
+                        return res.status(200).json({ status: 200, message: "Industry Category  delete successfully.", data: data });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.AddIndustrySubcategory = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        const datas = await industryCategory.findById(req.body.industryCategory);
+                        if (!datas || datas.length === 0) {
+                                return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                        }
+                        const obj = {
+                                industryCategory: datas._id,
+                                title: req.body.title,
+                        }
+                        const Data = await industrySubcategory.create(obj);
+                        res.status(200).json({ status: 200, message: "Industry category created successfully.", data: Data })
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAllIndustrySubcategory = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        const Data = await industrySubcategory.find({ industryCategory: req.params.industryCategory });
+                        if (data.length == 0) {
+                                return res.status(404).json({ status: 404, message: "Industry category data not found", data: {} });
+                        } else {
+                                res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getIndustrySubcategorybyId = async (req, res) => {
+        try {
+                const data = await industrySubcategory.findById(req.params.id);
+                if (!data || data.length === 0) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+                return res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.deleteIndustrySubcategory = async (req, res) => {
+        try {
+                const data = await industrySubcategory.findById(req.params.id);
+                if (!data) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                } else {
+                        const updated = await industrySubcategory.findByIdAndDelete({ _id: data._id });
+                        return res.status(200).json({ status: 200, message: "Industry Category  delete successfully.", data: data });
                 }
         } catch (error) {
                 console.log(error);
