@@ -2,9 +2,19 @@ const { validateUser } = require("../middlewares");
 const auth = require("../controllers/4instructorController");
 const { authJwt, authorizeRoles } = require("../middlewares");
 var multer = require("multer");
-const path = require("path");
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => { cb(null, "uploads"); }, filename: (req, file, cb) => { cb(null, Date.now() + path.extname(file.originalname)); },
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
+cloudinary.config({
+    cloud_name: "dbrvq9uxa",
+    api_key: "567113285751718",
+    api_secret: "rjTsz9ksqzlDtsrlOPcTs_-QtW4",
+});
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: "images/image",
+        allowed_formats: ["jpg", "jpeg", "png", "PNG", "xlsx", "xls", "pdf", "PDF"],
+    },
 });
 const upload = multer({ storage: storage });
 module.exports = (app) => {
@@ -21,8 +31,11 @@ module.exports = (app) => {
     app.get('/api/v1/instructor/help/getAllQuery', [authJwt.verifyToken], auth.getAllQuery);
     app.post('/api/v1/instructor/WebinarTopic/AddWebinarTopic', [authJwt.verifyToken], auth.AddWebinarTopic);
     app.get('/api/v1/instructor/WebinarTopic/getAllWebinarTopic', [authJwt.verifyToken], auth.getAllWebinarTopic);
+    app.get('/api/v1/instructor/getAllIndustryCategory', auth.getAllIndustryCategory);
+    app.get('/api/v1/instructor/getAllIndustrySubcategory/:industryCategory', auth.getAllIndustrySubcategory);
     app.get('/api/v1/instructor/WebinarTopic/:id', auth.getWebinarTopicbyId);
-    app.put('/api/v1/instructor/WebinarTopic/:id', auth.updateWebinarTopicbyId);
-
-
+    app.post('/api/v1/instructor/Courses/AddCourses', [authJwt.verifyToken], auth.AddCourses);
+    app.get('/api/v1/instructor/Courses/getAllCourses', [authJwt.verifyToken], auth.getAllCourses);
+    app.get('/api/v1/instructor/Courses/:id', auth.getCoursesbyId);
+    app.put('/api/v1/instructor/Courses/:id', auth.editCourses);
 };

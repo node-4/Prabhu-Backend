@@ -5,7 +5,9 @@ var newOTP = require("otp-generators");
 const User = require("../model/user");
 const helpandSupport = require('../model/helpAndSupport');
 const webinarTopic = require('../model/webinarTopic');
-
+const industryCategory = require('../model/industryCategory');
+const industrySubcategory = require('../model/industrySubcategory');
+const courses = require('../model/courses');
 exports.registration = async (req, res) => {
         const { phone, email } = req.body;
         try {
@@ -276,24 +278,136 @@ exports.getWebinarTopicbyId = async (req, res) => {
                 res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 };
-exports.updateWebinarTopicbyId = async (req, res) => {
+exports.getAllIndustryCategory = async (req, res) => {
         try {
-                const data = await webinarTopic.findById(req.params.id);
+                const Data = await industryCategory.find({});
+                if (Data.length == 0) {
+                        return res.status(404).json({ status: 404, message: "Industry category data not found", data: {} });
+                } else {
+                        res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAllIndustrySubcategory = async (req, res) => {
+        try {
+                const Data = await industrySubcategory.find({ industryCategory: req.params.industryCategory });
+                if (Data.length == 0) {
+                        return res.status(404).json({ status: 404, message: "Industry category data not found", data: {} });
+                } else {
+                        res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.AddCourses = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        const dataWebinarTopic = await webinarTopic.findById(req.body.webinarTopicId);
+                        if (!dataWebinarTopic || dataWebinarTopic.length === 0) {
+                                return res.status(404).json({ status: 404, message: "WebinarTopic Id not found", data: {} });
+                        }
+                        const dataSubIndustryCategory = await industrySubcategory.findById(req.body.industrySubcategoryId);
+                        if (!dataSubIndustryCategory || dataSubIndustryCategory.length === 0) {
+                                return res.status(404).json({ status: 404, message: "Industry Subcategory Id not found", data: {} });
+                        }
+                        const dataIndustryCategory = await industryCategory.findById(req.body.industryCategoryId);
+                        if (!dataIndustryCategory || dataIndustryCategory.length === 0) {
+                                return res.status(404).json({ status: 404, message: "Industry Category Id not found", data: {} });
+                        }
+                        let image = "";
+                        const obj = {
+                                user: data._id,
+                                title: req.body.title,
+                                content: req.body.content,
+                                webinarTopicId: dataWebinarTopic._id,
+                                industryCategoryId: dataIndustryCategory._id,
+                                industrySubcategoryId: dataSubIndustryCategory._id,
+                                image: image || "",
+                                date: req.body.date,
+                                time: req.body.time,
+                                status: req.body.status,
+                                visibilty: req.body.visibilty,
+                                publish: req.body.publish,
+                        }
+                        const Data = await courses.create(obj);
+                        res.status(200).json({ status: 200, message: "course created successfully.", data: Data })
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAllCourses = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        const Data = await courses.find({ user: data._id });
+                        if (Data.length == 0) {
+                                return res.status(404).json({ status: 404, message: "Courses data not found", data: {} });
+                        } else {
+                                res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
+                        }
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getCoursesbyId = async (req, res) => {
+        try {
+                const data = await courses.findById(req.params.id);
                 if (!data || data.length === 0) {
                         return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+                return res.status(200).json({ status: 200, message: "Data found successfully.", data: data });
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.editCourses = async (req, res) => {
+        try {
+                const data = await courses.findById(req.params.id);
+                if (!data) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
                 } else {
-                        if (req.body.status == "Approved") {
-                                const updated = await webinarTopic.findOneAndUpdate({ _id: data._id }, { $set: { status: req.body.status } }, { new: true });
-                                return res.status(200).json({ status: 200, message: "Approved update found successfully.", data: data });
+                        const dataWebinarTopic = await webinarTopic.findById(req.body.webinarTopicId);
+                        if (!dataWebinarTopic || dataWebinarTopic.length === 0) {
+                                return res.status(404).json({ status: 404, message: "WebinarTopic Id not found", data: {} });
                         }
-                        if (req.body.status == "Disapproved") {
-                                const updated = await webinarTopic.findOneAndUpdate({ _id: data._id }, { $set: { status: req.body.status } }, { new: true });
-                                return res.status(200).json({ status: 200, message: "Disapproved update found successfully.", data: data });
+                        const dataSubIndustryCategory = await industrySubcategory.findById(req.body.industrySubcategoryId);
+                        if (!dataSubIndustryCategory || dataSubIndustryCategory.length === 0) {
+                                return res.status(404).json({ status: 404, message: "Industry Subcategory Id not found", data: {} });
                         }
-                        if (req.body.status == "Pending") {
-                                const updated = await webinarTopic.findOneAndUpdate({ _id: data._id }, { $set: { status: req.body.status } }, { new: true });
-                                return res.status(200).json({ status: 200, message: "Pending update found successfully.", data: data });
+                        const dataIndustryCategory = await industryCategory.findById(req.body.industryCategoryId);
+                        if (!dataIndustryCategory || dataIndustryCategory.length === 0) {
+                                return res.status(404).json({ status: 404, message: "Industry Category Id not found", data: {} });
                         }
+                        let image = "";
+                        const obj = {
+                                user: data.user,
+                                title: req.body.title || data.title,
+                                content: req.body.content || data.content,
+                                webinarTopicId: dataWebinarTopic._id || data.webinarTopicId,
+                                industryCategoryId: dataIndustryCategory._id || data.industryCategoryId,
+                                industrySubcategoryId: dataSubIndustryCategory._id || data.industrySubcategoryId,
+                                image: image || "" || data.image,
+                                date: req.body.date || data.date,
+                                time: req.body.time || data.time,
+                                status: req.body.status || data.status,
+                                visibilty: req.body.visibilty || data.visibilty,
+                                publish: req.body.publish || data.publish,
+                        }
+                        let update = await courses.findByIdAndUpdate({ _id: data._id }, { $set: obj }, { new: true })
+                        return res.status(200).json({ status: 200, message: "Data update successfully.", data: update });
                 }
         } catch (error) {
                 console.log(error);

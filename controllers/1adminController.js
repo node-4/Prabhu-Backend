@@ -89,7 +89,7 @@ exports.getAllIndustryCategory = async (req, res) => {
                 const data = await User.findOne({ _id: req.user._id, });
                 if (data) {
                         const Data = await industryCategory.find({});
-                        if (data.length == 0) {
+                        if (Data.length == 0) {
                                 return res.status(404).json({ status: 404, message: "Industry category data not found", data: {} });
                         } else {
                                 res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
@@ -152,16 +152,11 @@ exports.AddIndustrySubcategory = async (req, res) => {
 };
 exports.getAllIndustrySubcategory = async (req, res) => {
         try {
-                const data = await User.findOne({ _id: req.user._id, });
-                if (data) {
-                        const Data = await industrySubcategory.find({ industryCategory: req.params.industryCategory });
-                        if (data.length == 0) {
-                                return res.status(404).json({ status: 404, message: "Industry category data not found", data: {} });
-                        } else {
-                                res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
-                        }
+                const Data = await industrySubcategory.find({ industryCategory: req.params.industryCategory });
+                if (Data.length == 0) {
+                        return res.status(404).json({ status: 404, message: "Industry category data not found", data: {} });
                 } else {
-                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                        res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
                 }
         } catch (err) {
                 console.log(err);
@@ -188,6 +183,84 @@ exports.deleteIndustrySubcategory = async (req, res) => {
                 } else {
                         const updated = await industrySubcategory.findByIdAndDelete({ _id: data._id });
                         return res.status(200).json({ status: 200, message: "Industry Category  delete successfully.", data: data });
+                }
+        } catch (error) {
+                console.log(error);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAllPendingWebinarTopic = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        const Data = await webinarTopic.find({ status: "Pending" });
+                        if (data.length == 0) {
+                                return res.status(404).json({ status: 404, message: "webinarTopic data not found", data: {} });
+                        } else {
+                                res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAllAcceptWebinarTopic = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        const Data = await webinarTopic.find({ status: "Approved" });
+                        if (data.length == 0) {
+                                return res.status(404).json({ status: 404, message: "webinarTopic data not found", data: {} });
+                        } else {
+                                res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAllRejectWebinarTopic = async (req, res) => {
+        try {
+                const data = await User.findOne({ _id: req.user._id, });
+                if (data) {
+                        const Data = await webinarTopic.find({ status: "Disapproved" });
+                        if (data.length == 0) {
+                                return res.status(404).json({ status: 404, message: "webinarTopic data not found", data: {} });
+                        } else {
+                                res.status(200).json({ status: 200, message: "Data found successfully.", data: Data })
+                        }
+                } else {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+        } catch (err) {
+                console.log(err);
+                res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.updateWebinarTopicbyId = async (req, res) => {
+        try {
+                const data = await webinarTopic.findById(req.params.id);
+                if (!data || data.length === 0) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                } else {
+                        if (req.body.status == "Approved") {
+                                const updated = await webinarTopic.findOneAndUpdate({ _id: data._id }, { $set: { status: req.body.status } }, { new: true });
+                                return res.status(200).json({ status: 200, message: "Approved update found successfully.", data: updated });
+                        }
+                        if (req.body.status == "Disapproved") {
+                                const updated = await webinarTopic.findOneAndUpdate({ _id: data._id }, { $set: { status: req.body.status } }, { new: true });
+                                return res.status(200).json({ status: 200, message: "Disapproved update found successfully.", data: updated });
+                        }
+                        if (req.body.status == "Pending") {
+                                const updated = await webinarTopic.findOneAndUpdate({ _id: data._id }, { $set: { status: req.body.status } }, { new: true });
+                                return res.status(200).json({ status: 200, message: "Pending update found successfully.", data: updated });
+                        }
                 }
         } catch (error) {
                 console.log(error);

@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const mongoosePaginate = require("mongoose-paginate");
+const mongooseAggregatePaginate = require("mongoose-aggregate-paginate");
 const courses = mongoose.Schema({
         user: {
                 type: mongoose.Schema.ObjectId,
@@ -8,6 +10,14 @@ const courses = mongoose.Schema({
                 type: mongoose.Schema.ObjectId,
                 ref: "webinarTopic",
         },
+        industryCategoryId: {
+                type: mongoose.Schema.ObjectId,
+                ref: "industryCategory",
+        },
+        industrySubcategoryId: {
+                type: mongoose.Schema.ObjectId,
+                ref: "industrySubcategory",
+        },
         title: {
                 type: String,
         },
@@ -15,10 +25,10 @@ const courses = mongoose.Schema({
                 type: String,
         },
         date: {
-                type: String
+                type: Date
         },
         time: {
-                type: Number
+                type: String
         },
         content: {
                 type: String
@@ -36,5 +46,8 @@ const courses = mongoose.Schema({
                 enum: ["Immediately", "Not Immediately"]
         },
 })
+
+courses.plugin(mongoosePaginate);
+courses.plugin(mongooseAggregatePaginate);
 const course = mongoose.model('courses', courses);
 module.exports = course
